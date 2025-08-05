@@ -21,12 +21,12 @@ public class WebScraper {
     private final URIUtilities uriUtilities = new URIUtilities();
     String baseURL;
 
-    // to make testing easier
-    public String getHtml(String url) throws IOException {
-        Document doc = Jsoup.connect(url).get();
-        return doc.outerHtml();
-    }
-
+    /**
+     * Scrapes a given URL and prints all links found at that URL.
+     * This method recursively visits each valid link found on the same domain.
+     *
+     * @param scrapeURL the URL to scrape
+     */
     public void scrape(String scrapeURL) {
         String url = uriUtilities.getURLWithoutQueryAndFragment(scrapeURL);
         if (visitedURLs.isEmpty() && (baseURL == null || baseURL.isEmpty())) {
@@ -47,14 +47,14 @@ public class WebScraper {
         } catch (IOException e) {
             return; // ignore IO exceptions, e.g. 404 errors
         }
-        Elements links = document.getElementsByTag("a"); //Todo: there may be links that are not <a> tags
+        Elements links = document.getElementsByTag("a");
 
         // process links
         Set<String> linksToScrape = new HashSet<>();
         for (Element link : links) {
             String linkURL = link.attr("href");
             linksFound.add(linkURL);
-//            System.out.println("  - " + linkURL);
+            System.out.println("  - " + linkURL);
 
             linkURL = uriUtilities.getURLAbsolute(linkURL, baseURL);
             linkURL = uriUtilities.getURLWithoutQueryAndFragment(linkURL);
@@ -70,20 +70,36 @@ public class WebScraper {
         linksToScrape.forEach(this::scrape);
     }
 
+    /**
+     * Fetches the HTML content of a given URL.
+     * This method exists for easier testing and mocking.
+     *
+     * @param url the URL to fetch HTML from
+     * @return the HTML content as a string
+     * @throws IOException if an error occurs while fetching the HTML
+     */
+    public String getHtml(String url) throws IOException {
+        Document doc = Jsoup.connect(url).get();
+        return doc.outerHtml();
+    }
+
+    /**
+     * Returns the set of visited URLs.
+     * This method exists for easier testing and mocking.
+     *
+     * @return a set of visited URLs
+     */
     public Set<String> getVisitedURLs() {
         return visitedURLs;
     }
 
+    /**
+     * Returns the set of links found during the scraping process.
+     * This method exists for easier testing and mocking.
+     *
+     * @return a set of links found
+     */
     public Set<String> getLinksFound() {
         return linksFound;
-    }
-
-    public void print() {
-        System.out.println(String.format("Visited %d URLs.", getVisitedURLs().size()));
-        System.out.println(String.format("Found %d links.", getLinksFound().size()));
-        System.out.println("Visited URLs:");
-        visitedURLs.forEach(System.out::println);
-        System.out.println("Links found:");
-        linksFound.forEach(System.out::println);
     }
 }
